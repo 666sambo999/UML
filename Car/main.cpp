@@ -1,8 +1,13 @@
 ﻿#include <iostream>
+#include <conio.h>
+
 using namespace std;
 
 #define MIN_TANK_VOLUME 28
 #define MAX_TANK_VOLUME 60
+
+#define Escape 27
+#define Enter 13
 
 class Tank
 {
@@ -107,9 +112,112 @@ public:
 	}
 };
 
+#define MAX_SPEED_LOW_LIMIT 40
+#define MAX_SPEED_HIGH_LIMIT 400
+
+class Car
+{
+	Engine engine;
+	Tank tank;
+	int speed;
+	const int MAX_SPEED;
+	bool driver_inside;
+public:
+	Car(const Engine& engine, const Tank& tank, int max_speed) :
+		engine(engine),
+		tank(tank),
+		speed(0),
+		MAX_SPEED
+		(
+			max_speed < MAX_SPEED_LOW_LIMIT ? MAX_SPEED_LOW_LIMIT :
+			max_speed > MAX_SPEED_HIGH_LIMIT ? MAX_SPEED_HIGH_LIMIT :
+			max_speed
+		)
+	{
+		driver_inside = false;
+		cout << "Your car is ready to go." << endl; 
+	}
+
+	Car(int consumption, int volume, int max_speed) :
+		engine(consumption),
+		tank(volume),
+		speed(0),
+		MAX_SPEED
+		(
+			max_speed < MAX_SPEED_LOW_LIMIT ? MAX_SPEED_LOW_LIMIT :
+			max_speed > MAX_SPEED_HIGH_LIMIT ? MAX_SPEED_HIGH_LIMIT :
+			max_speed
+		)
+	{
+		driver_inside = false; 
+		cout << "Your car is ready to go." << endl;
+	}
+	
+	void get_in()
+	{
+		driver_inside = true;
+		panel();
+	}
+	void get_out()
+	{
+		driver_inside = false; 
+	}
+	
+	void control()
+	{
+		cout << "press Enter to get in" << endl; 
+		char key;
+		do
+		{
+			key = _getch();
+			switch(key)
+			{
+			case 'F':case 'f': 
+				double fuel;
+				cout << "Введите объем топлива: "; cin >> fuel;
+				tank.fill(fuel);
+				break;
+			case 'E': case 'e': case Enter:
+				if (driver_inside)get_out();
+				else get_in();
+				break; 
+			}
+		} while (key != Escape);
+	}
+	
+	void panel()const
+	{
+		while (driver_inside)
+		{
+			system("CLS");
+			cout << "Fuel level:\t" << tank.get_fuel_level() << "liters.\n";
+			cout << "Engine is " << (engine.started() ? "started" : "stoted") << endl;
+		}
+	}
+	
+	void fill(double fuel)
+	{
+		tank.fill(fuel);
+	}
+
+	void info()const 
+	{
+		cout << "\n================================================\n" << endl; 
+		engine.info();
+		tank.info();
+		cout << "Max speed: " << MAX_SPEED << " km\h.\n";
+		cout << "\n================================================\n" << endl; 
+	}
+
+	~Car()
+	{
+		cout << "End: game over '_' " << endl;
+	}
+};
+
 
 //#define TANK_CHECK
-
+//#define ENGINE_CHECK
 void main()
 {
 	setlocale(LC_ALL, "");
@@ -118,14 +226,27 @@ void main()
 
 	Tank tank;
 	double fuel;
-	do
+	/*do
 	{
 		cout << "Введите объем топлива: "; cin >> fuel;
 		tank.fill(fuel);
 		tank.info();
-	} while (true);
+	} while (true);*/
 #endif // TANK_CHECK
 
-	Engine engine(10);
+#ifdef ENGINE_CHECK
+	Engine engine(12);
 	engine.info();
+#endif // ENGINE_CHECK
+
+	//Car vaz2106(engine, tank, 180); vaz2106.info();1 вариант 
+
+	//2 вариант 
+	//Car vaz2106(Engine(12), Tank(39), 180); vaz2106.info();
+
+	Car vaz2106(12, 39, 180); // vazeraty
+	/*vaz2106.fill(25);
+	vaz2106.info(); */
+	vaz2106.control();
+
 }
