@@ -5,6 +5,8 @@ VisualStudioVersion = 17.6.33815.320
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Car", "Car\Car.vcxproj", "{7AA7108E-17B4-4FD0-9C74-B7453F77C237}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Threads", "Threads\Threads.vcxproj", "{B562F76F-F7EF-4975-B956-3E7FDC12C8EF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -21,6 +23,14 @@ Global
 		{7AA7108E-17B4-4FD0-9C74-B7453F77C237}.Release|x64.Build.0 = Release|x64
 		{7AA7108E-17B4-4FD0-9C74-B7453F77C237}.Release|x86.ActiveCfg = Release|Win32
 		{7AA7108E-17B4-4FD0-9C74-B7453F77C237}.Release|x86.Build.0 = Release|Win32
+		{B562F76F-F7EF-4975-B956-3E7FDC12C8EF}.Debug|x64.ActiveCfg = Debug|x64
+		{B562F76F-F7EF-4975-B956-3E7FDC12C8EF}.Debug|x64.Build.0 = Debug|x64
+		{B562F76F-F7EF-4975-B956-3E7FDC12C8EF}.Debug|x86.ActiveCfg = Debug|Win32
+		{B562F76F-F7EF-4975-B956-3E7FDC12C8EF}.Debug|x86.Build.0 = Debug|Win32
+		{B562F76F-F7EF-4975-B956-3E7FDC12C8EF}.Release|x64.ActiveCfg = Release|x64
+		{B562F76F-F7EF-4975-B956-3E7FDC12C8EF}.Release|x64.Build.0 = Release|x64
+		{B562F76F-F7EF-4975-B956-3E7FDC12C8EF}.Release|x86.ActiveCfg = Release|Win32
+		{B562F76F-F7EF-4975-B956-3E7FDC12C8EF}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

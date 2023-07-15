@@ -1,5 +1,6 @@
 ﻿#include <iostream>
 #include <conio.h>
+#include <thread>
 
 using namespace std;
 
@@ -27,6 +28,12 @@ public:
 		if (fuel < 0)return;
 		fuel_level += fuel;
 		if (fuel_level > VOLUME)fuel_level = VOLUME;
+	}
+	double give_fuel(double amount)
+	{
+		fuel_level -= amount;
+		if (fuel_level < 0)fuel_level = 0;
+		return fuel_level;
 	}
 	// создаем бак - конструктор 
 	Tank(int volume=39)
@@ -122,6 +129,11 @@ class Car
 	int speed;
 	const int MAX_SPEED;
 	bool driver_inside;
+	struct Threads
+	{
+		std::thread panel_thread;
+		std::thread engine_idle_thread;
+	}threads;
 public:
 	Car(const Engine& engine, const Tank& tank, int max_speed) :
 		engine(engine),
@@ -156,35 +168,79 @@ public:
 	void get_in()
 	{
 		driver_inside = true;
-		panel();
+		//panel();
+		threads.panel_thread = std::thread(&Car::panel, this);
 	}
 	void get_out()
 	{
 		driver_inside = false; 
+		if (threads.panel_thread.joinable())threads.panel_thread.join();
+		system("CLS");
+		cout << "You are of your car" << endl; 
 	}
 	
 	void control()
 	{
 		cout << "press Enter to get in" << endl; 
-		char key;
+		char key=0;
 		do
 		{
-			key = _getch();
-			switch(key)
+			if (_kbhit())
 			{
-			case 'F':case 'f': 
-				double fuel;
-				cout << "Введите объем топлива: "; cin >> fuel;
-				tank.fill(fuel);
-				break;
-			case 'E': case 'e': case Enter:
-				if (driver_inside)get_out();
-				else get_in();
-				break; 
+				key = _getch();
+				switch (key)
+				{
+				case 'F':case 'f':
+					if (driver_inside)
+					{
+						cout << "Слышь, из тачки выйди ... " << endl;
+					}
+					else
+					{
+						double fuel;
+						cout << "Введите объем топлива: "; cin >> fuel;
+						tank.fill(fuel);
+						//cin.ignore();
+						key = 0;
+						cout << "Ваш автомобиль заправлен. Have a nice day!" << endl;
+					}
+					break;
+				case 'E': case 'e': case Enter:
+					if (driver_inside)get_out();
+					else get_in();
+					break;
+				case'I':case'i': // зажигание 
+					engine.started() ? stop() : start();
+					break;
+				case Escape:
+					get_out();
+				}
 			}
+			if (tank.get_fuel_level() == 0)stop();
 		} while (key != Escape);
 	}
 	
+	void engine_idle()
+	{
+		while (engine.started() && tank.give_fuel(engine.get_fuel_consumption()))
+			std::this_thread::sleep_for(1s);
+	}
+	
+	void start()
+	{
+		if (driver_inside && tank.get_fuel_level())
+		{
+			engine.start();
+			threads.engine_idle_thread = std::thread(&Car::engine_idle, this);
+		}
+	}
+
+	void stop()
+	{
+		engine.stop();
+		if (threads.engine_idle_thread.joinable())threads.engine_idle_thread.join();
+	}
+
 	void panel()const
 	{
 		while (driver_inside)
@@ -192,6 +248,7 @@ public:
 			system("CLS");
 			cout << "Fuel level:\t" << tank.get_fuel_level() << "liters.\n";
 			cout << "Engine is " << (engine.started() ? "started" : "stoted") << endl;
+			std::this_thread::sleep_for(1s);
 		}
 	}
 	
@@ -243,8 +300,10 @@ void main()
 
 	//2 вариант 
 	//Car vaz2106(Engine(12), Tank(39), 180); vaz2106.info();
-
-	Car vaz2106(12, 39, 180); // vazeraty
+	
+	
+	// vazeraty
+	Car vaz2106(12, 39, 180); 
 	/*vaz2106.fill(25);
 	vaz2106.info(); */
 	vaz2106.control();
