@@ -1,6 +1,7 @@
 ﻿#include <iostream>
 #include <conio.h>
 #include <thread>
+#include <Windows.h>
 
 using namespace std;
 
@@ -128,17 +129,20 @@ class Car
 	Tank tank;
 	int speed;
 	const int MAX_SPEED;
+	int accelleration; 
 	bool driver_inside;
 	struct Threads
 	{
 		std::thread panel_thread;
 		std::thread engine_idle_thread;
+		std::thread free_wheeling_thread;
 	}threads;
 public:
-	Car(const Engine& engine, const Tank& tank, int max_speed) :
+	Car(const Engine& engine=10, const Tank& tank=60, int max_speed=250,int acceleration=10) :
 		engine(engine),
 		tank(tank),
 		speed(0),
+		accelleration(acceleration),
 		MAX_SPEED
 		(
 			max_speed < MAX_SPEED_LOW_LIMIT ? MAX_SPEED_LOW_LIMIT :
@@ -150,10 +154,11 @@ public:
 		cout << "Your car is ready to go." << endl; 
 	}
 
-	Car(int consumption, int volume, int max_speed) :
+	Car(int consumption=10, int volume=60, int max_speed=250,int accelleration =10) :
 		engine(consumption),
 		tank(volume),
 		speed(0),
+		accelleration(accelleration),
 		MAX_SPEED
 		(
 			max_speed < MAX_SPEED_LOW_LIMIT ? MAX_SPEED_LOW_LIMIT :
@@ -206,17 +211,43 @@ public:
 					}
 					break;
 				case 'E': case 'e': case Enter:
+					if (speed)
+					{
+						cout << "нельзя так делать!!!!" << endl;
+						std::this_thread::sleep_for(1s);
+						break;
+					}
 					if (driver_inside)get_out();
 					else get_in();
 					break;
 				case'I':case'i': // зажигание 
-					engine.started() ? stop() : start();
+					if (driver_inside) engine.started() ? stop() : start();
+					break;
+				case'W':case'w':
+					if (driver_inside && engine.started())
+					{
+						accellerate();
+						//std::this_thread::sleep_for(1s);
+					}
+					break;
+				case'S': case's':
+					if (driver_inside)
+					{
+						slow_down();
+						//std::this_thread::sleep_for(1s);
+					}
 					break;
 				case Escape:
+					if (speed) speed = 0;
+					stop();
 					get_out();
 				}
 			}
 			if (tank.get_fuel_level() == 0)stop();
+			if (speed && !threads.free_wheeling_thread.joinable())
+				threads.free_wheeling_thread = std::thread(&Car::free_wheeling, this);
+			if (speed == 0 && threads.free_wheeling_thread.joinable())
+				threads.free_wheeling_thread.join();
 		} while (key != Escape);
 	}
 	
@@ -245,11 +276,54 @@ public:
 	{
 		while (driver_inside)
 		{
+			HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 			system("CLS");
-			cout << "Fuel level:\t" << tank.get_fuel_level() << "liters.\n";
+			double coefficient = 2.3;
+			for (int i = 0; i < MAX_SPEED / coefficient; i++)
+			{
+				SetConsoleTextAttribute(hConsole, 0x02);
+				if (i > 70/ coefficient)SetConsoleTextAttribute(hConsole, 0x06);
+				if (i > 120/ coefficient)SetConsoleTextAttribute(hConsole, 0x0C);
+				cout << (i < speed / coefficient ? "|" : ".");
+				SetConsoleTextAttribute(hConsole, 0x07);
+			}
+			cout << endl; 
+			cout << "Fuel level:\t" << tank.get_fuel_level() << "liters.\t";
+			if (tank.get_fuel_level() <= 5)
+			{
+				SetConsoleTextAttribute(hConsole, 0xCF);
+				cout << " LOW FUEL ";
+				SetConsoleTextAttribute(hConsole, 0x07);
+			}
+			cout << endl; 
 			cout << "Engine is " << (engine.started() ? "started" : "stoted") << endl;
+			cout << "Speed:\t" << speed << " km/h." << endl; 
 			std::this_thread::sleep_for(1s);
 		}
+	}
+
+	void free_wheeling()
+	{
+		while (speed)
+		{
+			if (speed-- < 0)speed = 0;
+			std::this_thread::sleep_for(1s);
+		}
+	}
+
+	void accellerate()
+	{
+		//if(driver_inside && engine.started()) 
+		speed += accelleration;
+		if (speed > MAX_SPEED)speed = MAX_SPEED;
+		std::this_thread::sleep_for(1s);
+	}
+	void slow_down()
+	{
+		//if(driver_inside) 
+		if (speed) speed -= accelleration*2;
+		if (speed < 0)speed = 0;
+		std::this_thread::sleep_for(1s);
 	}
 	
 	void fill(double fuel)
