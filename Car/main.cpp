@@ -11,7 +11,9 @@ using namespace std;
 #define Escape 27
 #define Enter 13
 
-class Tank
+// Вазератти 2106
+
+class Tank 
 {
 	const int VOLUME; // объем бака
 	double fuel_level; // уровень бака топливом
@@ -61,13 +63,14 @@ public:
 
 };
 
-
 #define MIN_ENGINE_CONSUMPTION 4
 #define MAX_ENGINE_CONSUMPTION 25
+
 class Engine
 {
 	double consumption; // потребление 
 	double fuel_consumption; // потребления в секунду
+	double default_fuel_consumption; // потребления в секунду
 	bool is_started; // запуск двигателя 
 public:
 	double get_consumption()const
@@ -97,9 +100,19 @@ public:
 		this->consumption = consumption;
 		set_fuel_consumption();
 	}
-	void set_fuel_consumption()
+	double set_fuel_consumption()
 	{
-		fuel_consumption = consumption * 3e-5;
+		return fuel_consumption = default_fuel_consumption = consumption * 3e-5;
+	}
+	double set_fuel_consumption(int speed)
+	{
+		if (speed == 0)fuel_consumption = consumption * 3e-5;
+		else if (speed <= 60) fuel_consumption = default_fuel_consumption * 20 / 3;
+		else if (speed <=70 ) fuel_consumption = default_fuel_consumption * 40 + default_fuel_consumption  * 20 / 3;
+		else if (speed <= 120) fuel_consumption = default_fuel_consumption * 20 / 3;
+		else if (speed <= 140) fuel_consumption = default_fuel_consumption * 50 / 6;
+		else fuel_consumption = default_fuel_consumption * 10;
+		return fuel_consumption;
 	}
 	// Конструктор 
 	Engine(double consumption)
@@ -243,6 +256,7 @@ public:
 					get_out();
 				}
 			}
+			engine.set_fuel_consumption(speed);
 			if (tank.get_fuel_level() == 0)stop();
 			if (speed && !threads.free_wheeling_thread.joinable())
 				threads.free_wheeling_thread = std::thread(&Car::free_wheeling, this);
@@ -282,7 +296,7 @@ public:
 			for (int i = 0; i < MAX_SPEED / coefficient; i++)
 			{
 				SetConsoleTextAttribute(hConsole, 0x02);
-				if (i > 70/ coefficient)SetConsoleTextAttribute(hConsole, 0x06);
+				if (i > 70/ coefficient)SetConsoleTextAttribute(hConsole, 0x0E);
 				if (i > 120/ coefficient)SetConsoleTextAttribute(hConsole, 0x0C);
 				cout << (i < speed / coefficient ? "|" : ".");
 				SetConsoleTextAttribute(hConsole, 0x07);
@@ -298,6 +312,7 @@ public:
 			cout << endl; 
 			cout << "Engine is " << (engine.started() ? "started" : "stoted") << endl;
 			cout << "Speed:\t" << speed << " km/h." << endl; 
+			cout << "Consumption fuel: " << engine.get_fuel_consumption() << " liters" << endl;
 			std::this_thread::sleep_for(1s);
 		}
 	}
@@ -307,6 +322,7 @@ public:
 		while (speed)
 		{
 			if (speed-- < 0)speed = 0;
+			//engine.set_fuel_consumption(speed);
 			std::this_thread::sleep_for(1s);
 		}
 	}
@@ -346,7 +362,6 @@ public:
 	}
 };
 
-
 //#define TANK_CHECK
 //#define ENGINE_CHECK
 void main()
@@ -377,9 +392,9 @@ void main()
 	
 	
 	// vazeraty
-	Car vaz2106(12, 39, 180); 
-	/*vaz2106.fill(25);
-	vaz2106.info(); */
+	Car vaz2106(10, 39, 180, 15); 
+	//vaz2106.fill(25);
+	vaz2106.info();
 	vaz2106.control();
 
 }
